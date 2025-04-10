@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Hitesh Chaudhary Bot</title>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+  </head>
+  <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-xl w-full bg-gray-800 p-6 rounded-2xl shadow-lg">
+      <h1 class="text-3xl font-bold mb-4 text-center text-indigo-400">
+        Hitesh Choudhary Bot ☕
+      </h1>
+
+      <div class="space-y-4 max-h-[400px] overflow-y-auto mb-4 pr-2">
+        {% for chat in chat_history %}
+          <div class="flex flex-col space-y-2">
+            <div class="self-end bg-indigo-600 text-white p-3 rounded-lg max-w-[80%]">
+              <p class="text-sm font-semibold mb-1">You:</p>
+              <p class="whitespace-pre-line">{{ chat.user }}</p>
+            </div>
+            <div class="self-start bg-gray-700 text-green-400 p-3 rounded-lg max-w-[80%]">
+              <p class="text-sm font-semibold mb-1">Bot:</p>
+              <p class="whitespace-pre-line">{{ chat.bot | urlize | safe }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <form method="post" class="space-y-4">
+        <input
+          type="text"
+          name="user_input"
+          placeholder="Ask something..."
+          required
+          class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <div class="flex justify-between items-center">
+          <button
+            type="submit"
+            class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition"
+          >
+            Submit
+          </button>
+          </form>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
