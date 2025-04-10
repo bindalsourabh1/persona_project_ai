@@ -1,21 +1,23 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Depends, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
+from typing import List, Dict, Optional
+import uuid
+from starlette.middleware.sessions import SessionMiddleware
 
 load_dotenv()
 
 app = FastAPI()
+app.add_middleware(SessionMiddleware, secret_key="8f3c1e2b4d5a6e7f8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5g6h7i8j9k0l1m")  # Add a strong secret key here
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 api_key = os.getenv("GEMINI_API_KEY")
 client = OpenAI(api_key=api_key, base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
-
-chat_history = []
 
 system_prompt = """
 
@@ -112,14 +114,24 @@ Output: Bahut proud feel hota hai aise moments pe – sab firsts special hote ha
 """  # Keep your same prompt here
 
 @app.get("/", response_class=HTMLResponse)
-def get_form(request: Request):
+async def get_form(request: Request):
+    # Initialize or get the session's chat history
+    if "chat_history" not in request.session:
+        request.session["chat_history"] = []
+    
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "chat_history": chat_history
+        "chat_history": request.session.get("chat_history", [])
     })
 
 @app.post("/", response_class=HTMLResponse)
 async def post_form(request: Request, user_input: str = Form(...)):
+    # Initialize chat history if it doesn't exist
+    if "chat_history" not in request.session:
+        request.session["chat_history"] = []
+    
+    chat_history = request.session.get("chat_history", [])
+    
     messages = [{"role": "system", "content": system_prompt}]
     for chat in chat_history:
         messages.append({"role": "user", "content": chat["user"]})
@@ -134,6 +146,9 @@ async def post_form(request: Request, user_input: str = Form(...)):
 
     bot_reply = response.choices[0].message.content
     chat_history.append({"user": user_input, "bot": bot_reply})
+    
+    # Update the session
+    request.session["chat_history"] = chat_history
 
     return templates.TemplateResponse("index.html", {
         "request": request,
@@ -141,6 +156,7 @@ async def post_form(request: Request, user_input: str = Form(...)):
     })
 
 @app.get("/reset")
-def reset_chat(request: Request):
-    chat_history.clear()
+async def reset_chat(request: Request):
+    # Clear the chat history in the session
+    request.session["chat_history"] = []
     return RedirectResponse(url="/", status_code=303)
