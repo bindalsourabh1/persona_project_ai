@@ -115,8 +115,10 @@ Output: Bahut proud feel hota hai aise moments pe – sab firsts special hote ha
 
 @app.get("/", response_class=HTMLResponse)
 async def get_form(request: Request):
-    # Initialize or get the session's chat history
-    if "chat_history" not in request.session:
+    # Check for a "reset" query parameter to clear the chat history
+    reset_chat = request.query_params.get("reset", "false").lower() == "true"
+    
+    if reset_chat or "chat_history" not in request.session:
         request.session["chat_history"] = []
     
     return templates.TemplateResponse("index.html", {
